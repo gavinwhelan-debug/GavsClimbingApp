@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Climb Week 1"/>
+<meta name="theme-color" content="#0d0d0d"/>
+<title>Climb Week 1</title>
+
+<link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22Climbing%20Week%201%22%2C%22short_name%22%3A%22Climb%20W1%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230d0d0d%22%2C%22theme_color%22%3A%22%230d0d0d%22%7D"/>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --climb: #E8FF47;
+    --train: #FF6B47;
+    --rest: #47C8FF;
+    --bg: #0d0d0d;
+    --surface: #111;
+    --border: #1e1e1e;
+    --text: #f0f0f0;
+    --muted: #888;
+    --dim: #444;
+    --font-mono: 'Courier New', Courier, monospace;
+    --font-serif: Georgia, serif;
+  }
+
+  html, body {
+    height: 100%; background: var(--bg);
+    color: var(--text); font-family: var(--font-mono);
+    overflow-x: hidden; -webkit-tap-highlight-color: transparent;
+  }
+
+  /* LAYOUT */
+  #app { display: flex; flex-direction: column; height: 100dvh; }
+
+  /* HEADER */
+  #header {
+    background: #111; border-bottom: 2px solid #1a1a1a;
+    padding: 20px 20px 14px; flex-shrink: 0;
+  }
+  #header-top { display: flex; align-items: flex-end; justify-content: space-between; }
+  .eyebrow { font-size: 10px; letter-spacing: .22em; color: #555; text-transform: uppercase; margin-bottom: 3px; }
+  h1 { font-family: var(--font-serif); font-size: 32px; color: #fff; letter-spacing: -0.5px; }
+  h1 span { color: var(--climb); }
+  .subtitle { font-size: 10px; color: #444; letter-spacing: .12em; margin-top: 3px; }
+  .legend { display: flex; gap: 12px; align-items: center; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 9px; color: #555; letter-spacing: .1em; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+  /* DAY TABS */
+  #tabs {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    background: #0d0d0d; border-bottom: 2px solid #1a1a1a;
+    flex-shrink: 0; overflow: hidden;
+  }
+  .tab {
+    padding: 12px 4px 10px; text-align: center; cursor: pointer;
+    border-right: 1px solid #1a1a1a; border-top: 3px solid transparent;
+    transition: all .15s; background: transparent; -webkit-appearance: none; border-bottom: none; border-left: none;
+    font-family: var(--font-mono);
+  }
+  .tab:last-child { border-right: none; }
+  .tab.active { background: #161616; }
+  .tab-day { font-size: 9px; letter-spacing: .12em; color: #333; display: block; margin-bottom: 5px; }
+  .tab-dot { width: 22px; height: 22px; border-radius: 50%; margin: 0 auto 4px; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; letter-spacing: .05em; transition: all .15s; color: transparent; }
+  .tab-type { font-size: 8px; letter-spacing: .08em; display: block; }
+
+  /* SCROLL BODY */
+  #body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 20px 16px 100px; }
+
+  /* DAY HEADER */
+  #day-header { margin-bottom: 20px; }
+  .day-meta { font-size: 10px; color: #555; letter-spacing: .2em; text-transform: uppercase; margin-bottom: 5px; }
+  h2 { font-family: var(--font-serif); font-size: 26px; color: #fff; margin-bottom: 10px; }
+  .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .badge { font-size: 9px; font-weight: bold; padding: 3px 10px; letter-spacing: .14em; text-transform: uppercase; }
+  .badge-type { }
+  .badge-tag { border: 1px solid #2a2a2a; color: #555; background: transparent; }
+  .note-box {
+    background: #161616; border: 1px solid #222; border-left: 3px solid #333;
+    padding: 10px 14px; font-size: 12px; color: #777; line-height: 1.6; font-style: italic;
+  }
+
+  /* SESSION CARDS */
+  .session {
+    background: var(--surface); border: 1px solid var(--border);
+    margin-bottom: 12px; position: relative; overflow: hidden;
+  }
+  .session-accent { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+  .session-inner { padding: 14px 16px 14px 20px; }
+  .session-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px; flex-wrap: wrap; gap: 6px;
+  }
+  .session-title-row { display: flex; align-items: center; gap: 8px; }
+  .session-icon { font-size: 16px; }
+  .session-title { font-size: 11px; font-weight: bold; color: #e0e0e0; letter-spacing: .08em; text-transform: uppercase; }
+  .session-dur { font-size: 9px; padding: 2px 8px; letter-spacing: .14em; border: 1px solid transparent; }
+  .session-items { display: flex; flex-direction: column; gap: 8px; }
+  .session-item { display: flex; align-items: flex-start; gap: 8px; }
+  .item-arrow { font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+  .item-text { font-size: 13px; color: #aaa; line-height: 1.55; }
+
+  /* WEEK STRIP */
+  #week-strip {
+    margin-top: 28px; padding-top: 20px; border-top: 1px solid #1e1e1e;
+  }
+  .strip-label { font-size: 9px; letter-spacing: .2em; color: #333; margin-bottom: 12px; text-transform: uppercase; }
+  .strip-days { display: flex; gap: 0; }
+  .strip-day {
+    flex: 1; text-align: center; cursor: pointer; padding: 8px 4px;
+    border-top: 2px solid transparent; transition: all .15s;
+  }
+  .strip-day-name { font-size: 8px; color: #333; letter-spacing: .1em; display: block; margin-bottom: 5px; }
+  .strip-dot { width: 24px; height: 24px; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; transition: all .15s; }
+
+  /* INSTALL BANNER */
+  #install-banner {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #161616; border-top: 1px solid #2a2a2a;
+    padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
+    z-index: 100; transform: translateY(100%); transition: transform .3s ease;
+  }
+  #install-banner.show { transform: translateY(0); }
+  .install-text { font-size: 12px; color: #888; line-height: 1.4; }
+  .install-text strong { color: #ccc; display: block; margin-bottom: 2px; }
+  #install-btn {
+    background: var(--climb); color: #000; border: none; padding: 8px 16px;
+    font-family: var(--font-mono); font-size: 11px; font-weight: bold;
+    letter-spacing: .1em; cursor: pointer; flex-shrink: 0;
+  }
+  #dismiss-btn {
+    background: transparent; border: none; color: #444; font-size: 18px;
+    cursor: pointer; padding: 4px 8px; flex-shrink: 0;
+  }
+
+  /* iOS hint */
+  #ios-hint {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #161616; border-top: 1px solid #2a2a2a;
+    padding: 16px 20px; z-index: 100;
+    display: none;
+    flex-direction: column; gap: 6px;
+  }
+  #ios-hint p { font-size: 12px; color: #aaa; line-height: 1.6; }
+  #ios-hint strong { color: var(--climb); }
+  #ios-close { background: transparent; border: 1px solid #333; color: #666; padding: 6px 14px; font-family: var(--font-mono); font-size: 11px; cursor: pointer; align-self: flex-end; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <div id="header-top">
+      <div>
+        <div class="eyebrow">Monthly Training Plan</div>
+        <h1>WEEK <span>01</span></h1>
+        <div class="subtitle">BOULDERING / CLIMBING — FOUNDATION PHASE</div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#E8FF47"></div>CLIMB</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#FF6B47"></div>TRAIN</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#47C8FF"></div>REST</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tabs"></div>
+
+  <div id="body">
+    <div id="day-header"></div>
+    <div id="sessions"></div>
+    <div id="week-strip">
+      <div class="strip-label">Week at a Glance</div>
+      <div class="strip-days" id="strip-days"></div>
+    </div>
+  </div>
+</div>
+
+<div id="install-banner">
+  <div class="install-text">
+    <strong>Add to Home Screen</strong>
+    Install this as an app — works offline too.
+  </div>
+  <button id="dismiss-btn">×</button>
+  <button id="install-btn">INSTALL</button>
+</div>
+
+<div id="ios-hint">
+  <p>To install: tap <strong>Share ↑</strong> then <strong>"Add to Home Screen"</strong></p>
+  <button id="ios-close">GOT IT</button>
+</div>
+
+<script>
+const TYPE = { CLIMB: '#E8FF47', TRAIN: '#FF6B47', REST: '#47C8FF' };
+const TYPE_TEXT = { CLIMB: '#0a0a0a', TRAIN: '#fff', REST: '#0a0a0a' };
+
+const days = [
+  {
+    day:'MON', label:'Monday', date:'Day 1', type:'CLIMB', tag:'Technique Focus',
+    notes:'Focus on quality, not quantity. Zero ego today.',
+    sessions:[
+      { title:'Warm-Up', dur:'15 min', icon:'🔥', items:['Easy traversing on jugs — stay below V1','Arm circles, shoulder CARs, wrist mobility','10× hip circles each side, 10× leg swings'] },
+      { title:'Technique Drills', dur:'30 min', icon:'🎯', items:['Silent feet — place feet with zero scuff on every move','Straight-arm drills — stay on skeleton, not muscle','Slow-motion downclimbing on your warm-up problems','3-count pause on every foothold before moving'] },
+      { title:'Project Block', dur:'40 min', icon:'🪨', items:['Work 3–5 problems at your limit (V3–V5 or current grade)','Max 5 attempts per problem before moving on','Rest 3–5 min between hard attempts — full recovery'] },
+      { title:'Cool-Down', dur:'15 min', icon:'🌊', items:['Easy traversing on jugs','Full body stretch: forearms, lats, hips, hamstrings','Log your projects and what worked'] },
+    ]
+  },
+  {
+    day:'TUE', label:'Tuesday', date:'Day 2', type:'TRAIN', tag:'Antagonist & Core',
+    notes:'Protect your tendons — antagonist work prevents injury long-term.',
+    sessions:[
+      { title:'Push Antagonist', dur:'25 min', icon:'💪', items:['Push-ups: 3 × 15 (wide, narrow, archer)','Dumbbell overhead press: 3 × 12','Dips: 3 × 10 (bodyweight or assisted)','External shoulder rotations with band: 3 × 20'] },
+      { title:'Core Circuit', dur:'25 min', icon:'⚡', items:['Plank: 3 × 45 sec','Hollow body hold: 3 × 30 sec','Hanging knee raises: 3 × 12','Side plank: 2 × 30 sec each side','Dead bug: 3 × 10 reps'] },
+      { title:'Mobility Finisher', dur:'15 min', icon:'🧘', items:['Hip flexor stretch: 60 sec each side','Thoracic rotation on foam roller: 2 min','Doorframe chest stretch: 60 sec','Wrist flexor/extensor stretch sequence'] },
+    ]
+  },
+  {
+    day:'WED', label:'Wednesday', date:'Day 3', type:'REST', tag:'Active Recovery',
+    notes:'Rest is where adaptation happens. Don\'t skip this.',
+    sessions:[
+      { title:'Active Recovery', dur:'30–45 min', icon:'🚶', items:['20–30 min easy walk or light cycling','Full body foam rolling session','Finger tendon mobility: prayer stretch, reverse prayer','Yoga sun salutations × 5 rounds (optional)'] },
+      { title:'Mental Game', dur:'15 min', icon:'🧠', items:['Watch climb beta videos — study footwork','Visualise your current project sequence','Review your session log from Monday'] },
+    ]
+  },
+  {
+    day:'THU', label:'Thursday', date:'Day 4', type:'CLIMB', tag:'Power & Volume',
+    notes:'Push hard but be honest with yourself on skin and finger health.',
+    sessions:[
+      { title:'Warm-Up', dur:'15 min', icon:'🔥', items:['Traversing: 10 min progressive intensity','Pulley prep: gentle hanging, 3 × 10 sec passive hang','Dynamic movements: shakeouts, hip warm-up'] },
+      { title:'Power Bouldering', dur:'35 min', icon:'💥', items:['Limit bouldering: 3–4 hard problems, 5–6 attempts each','Focus on explosive moves and dynamic throws','Full rest (5 min) between each problem','Stop if any finger twinge — no hero moves'] },
+      { title:'Volume Block', dur:'30 min', icon:'🔄', items:['Flash or 2-try problems 2 grades below limit','Aim for 8–12 successful sends','Maintain technique — no sloppy feet'] },
+      { title:'Fingerboard Intro', dur:'10 min', icon:'🤏', items:['Half-crimp hang: 3 × 7 sec on 20mm edge (use foothold!)','Rest 2 min between sets','Bodyweight only — no added weight Week 1'] },
+    ]
+  },
+  {
+    day:'FRI', label:'Friday', date:'Day 5', type:'TRAIN', tag:'Strength & Pulling',
+    notes:'Strong legs = better footwork on the wall. Don\'t neglect them.',
+    sessions:[
+      { title:'Pull Strength', dur:'30 min', icon:'🏋️', items:['Pull-ups: 4 × max (aim for 6–10, use band if needed)','Lock-off holds: 3 × 5 sec at 90° and 120° elbow angle','Inverted rows: 3 × 12','Face pulls with band: 3 × 20'] },
+      { title:'Leg & Hip Power', dur:'20 min', icon:'🦵', items:['Bulgarian split squat: 3 × 10 each leg','Box step-ups (high box): 3 × 12','Hip abduction with band: 3 × 20 each side','Calf raises: 2 × 20'] },
+      { title:'Forearm Maintenance', dur:'10 min', icon:'🖐️', items:['Rice bucket finger extensions: 3 × 60 sec','Reverse wrist curls: 3 × 15 with light dumbbell','Pronation/supination with dumbbell: 2 × 15'] },
+    ]
+  },
+  {
+    day:'SAT', label:'Saturday', date:'Day 6', type:'CLIMB', tag:'Fun Session',
+    notes:'This is your reward session. Climb for joy, not metrics.',
+    sessions:[
+      { title:'Warm-Up + Play', dur:'20 min', icon:'🎮', items:['Easy climbing on familiar problems','No pressure — just move and have fun','Try some movement improv: climb without using thumbs'] },
+      { title:'Project or Games', dur:'50 min', icon:'🏆', items:['Return to your Monday project — try with fresh eyes','Play "add a move" with a partner (if available)','Try problems outside your style (slopers if you\'re a crimp climber)','Flash challenge: 5 new problems you\'ve never tried'] },
+      { title:'Cool-Down', dur:'15 min', icon:'🌊', items:['Full stretch sequence','Log your week: wins, feels, injuries, nutrition','Pick 2 projects for next week'] },
+    ]
+  },
+  {
+    day:'SUN', label:'Sunday', date:'Day 7', type:'REST', tag:'Full Rest',
+    notes:'Your connective tissue adapts on rest days, not climb days.',
+    sessions:[
+      { title:'Complete Rest', dur:'As needed', icon:'😴', items:['Sleep 8+ hours — recovery is training','Eat well: protein, carbs, and don\'t undereat','Light walk if you feel stiff, otherwise do nothing','Prep your bag for Monday\'s session'] },
+    ]
+  },
+];
+
+let active = 0;
+
+function render() {
+  const d = days[active];
+  const color = TYPE[d.type];
+  const textColor = TYPE_TEXT[d.type];
+
+  // Tabs
+  document.getElementById('tabs').innerHTML = days.map((dd, i) => {
+    const c = TYPE[dd.type];
+    const tc = TYPE_TEXT[dd.type];
+    const isAct = i === active;
+    return `<button class="tab ${isAct ? 'active' : ''}" onclick="setDay(${i})"
+      style="border-top-color:${isAct ? c : 'transparent'}">
+      <span class="tab-day" style="color:${isAct ? '#aaa' : '#333'}">${dd.day}</span>
+      <div class="tab-dot" style="background:${isAct ? c : c+'22'};color:${isAct ? tc : c}">
+        ${dd.type[0]}
+      </div>
+    </button>`;
+  }).join('');
+
+  // Day header
+  document.getElementById('day-header').innerHTML = `
+    <div class="day-meta">${d.date}</div>
+    <h2>${d.label}</h2>
+    <div class="badges">
+      <span class="badge badge-type" style="background:${color};color:${textColor}">${d.type}</span>
+      <span class="badge badge-tag">${d.tag}</span>
+    </div>
+    <div class="note-box">⚠ ${d.notes}</div>
+  `;
+
+  // Sessions
+  document.getElementById('sessions').innerHTML = d.sessions.map(s => `
+    <div class="session">
+      <div class="session-accent" style="background:${color}"></div>
+      <div class="session-inner">
+        <div class="session-header">
+          <div class="session-title-row">
+            <span class="session-icon">${s.icon}</span>
+            <span class="session-title">${s.title}</span>
+          </div>
+          <span class="session-dur" style="color:${color};border-color:${color}44">${s.dur}</span>
+        </div>
+        <div class="session-items">
+          ${s.items.map(item => `
+            <div class="session-item">
+              <span class="item-arrow" style="color:${color}">▸</span>
+              <span class="item-text">${item}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // Strip
+  document.getElementById('strip-days').innerHTML = days.map((dd, i) => {
+    const c = TYPE[dd.type];
+    const tc = TYPE_TEXT[dd.type];
+    const isAct = i === active;
+    return `<div class="strip-day" onclick="setDay(${i})"
+      style="border-top-color:${isAct ? c : 'transparent'}">
+      <span class="strip-day-name" style="color:${isAct ? '#888' : '#333'}">${dd.day}</span>
+      <div class="strip-dot" style="background:${isAct ? c : c+'22'};color:${isAct ? tc : c}">
+        ${dd.type[0]}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setDay(i) {
+  active = i;
+  render();
+  document.getElementById('body').scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+render();
+
+// PWA Install
+let deferredPrompt;
+const banner = document.getElementById('install-banner');
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+if (!isStandalone) {
+  if (isIOS) {
+    setTimeout(() => {
+      document.getElementById('ios-hint').style.display = 'flex';
+    }, 2000);
+    document.getElementById('ios-close').onclick = () => {
+      document.getElementById('ios-hint').style.display = 'none';
+    };
+  } else {
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      setTimeout(() => banner.classList.add('show'), 2000);
+    });
+    document.getElementById('install-btn').onclick = async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        banner.classList.remove('show');
+      }
+    };
+    document.getElementById('dismiss-btn').onclick = () => banner.classList.remove('show');
+  }
+}
+
+// Service Worker (offline support)
+if ('serviceWorker' in navigator) {
+  const sw = `
+    const CACHE = 'climb-w1-v1';
+    self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(['.']))));
+    self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
+  `;
+  const blob = new Blob([sw], { type: 'application/javascript' });
+  navigator.serviceWorker.register(URL.createObjectURL(blob));
+}
+</script>
+</body>
+</html>
